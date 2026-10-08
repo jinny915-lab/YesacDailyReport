@@ -1,6 +1,6 @@
 // Paste the Apps Script Web App URL here after deployment (ends with /exec)
-https://script.google.com/macros/s/AKfycbxWytDdT6nHcLyqbu6TwtWK9n49t_0xRAVOeYUg_qkt8NNnGAdyXrD18Rlhi0O6e6U/exec
-window.YESAC_API_URL = 'PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE';
+
+window.YESAC_API_URL = 'https://script.google.com/macros/s/AKfycbxWytDdT6nHcLyqbu6TwtWK9n49t_0xRAVOeYUg_qkt8NNnGAdyXrD18Rlhi0O6e6U/exec';
 
 // Common API call. text/plain avoids a CORS preflight that Apps Script cannot answer.
 window.yesacApi = async function (payload) {
