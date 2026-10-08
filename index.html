@@ -10,7 +10,8 @@
 <body>
 <header class="top">
   <h1>Qcells CTV · YESAC Electrical Daily Report</h1>
-  <div class="sub">Report no. <b id="reportNo">—</b> <span id="revInfo"></span></div>
+  <div class="sub">Report no. <b id="reportNo">—</b> <span id="revInfo"></span>
+    · <a href="reports.html" style="color:#fff">Submitted reports</a></div>
 </header>
 
 <main>
@@ -394,8 +395,48 @@ $('keySave').onclick = () => {
   location.reload();
 };
 
+/* ---------- revise an existing report (index.html?edit=YES-...) ---------- */
+function clearForm() {
+  SIMPLE.forEach(id => $(id).value = id === 'calloutTargetMin' ? 30 : '');
+  ['exCallout', 'exAbnormal', 'exMaterial'].forEach(id => $(id).checked = false);
+  Object.keys(DEF).forEach(k => $(DEF[k].box).innerHTML = '');
+}
+function fillFromReport(R) {
+  clearForm();
+  const S = R.safety || {}, I = R.incidentDetail || {}, E = R.exceptions || {};
+  Object.entries({ reportDate: R.reportDate, shift: R.shift, preparedBy: R.preparedBy, area: R.area,
+    incident: S.incident, ppe: S.ppe, permits: S.permits, safetyNote: S.note,
+    calloutTargetMin: R.calloutTargetMin || 30, incAt: I.at, incLoc: I.location,
+    incNotified: I.notifiedAt, incDesc: I.desc, remarks: R.remarks }).forEach(([id, v]) => { if (v != null) $(id).value = v; });
+  $('exCallout').checked = !!E.callout; $('exAbnormal').checked = !!E.abnormal; $('exMaterial').checked = !!E.material;
+  (R.crew || []).forEach(v => addRow('crew', v));
+  (R.work || []).forEach(v => addRow('work', v));
+  (R.open || []).forEach(v => addRow('open', v));
+  (R.callouts || []).forEach(v => addRow('callout', v));
+  (R.abnormal || []).forEach(v => addRow('abnormal', v));
+  (R.materials || []).forEach(v => addRow('material', v));
+  if (!$('crewList').children.length) addRow('crew');
+  if (!$('workList').children.length) addRow('work');
+}
+async function startEdit(no) {
+  if (!KEY) return;
+  msg('Loading ' + no + '…', 'ok');
+  try {
+    const r = await yesacApi({ action: 'get', key: KEY, reportNo: no });
+    fillFromReport(r.report); recalc(); renderPhotos();
+    const note = r.meta.reviewNote ? `<br>Qcells comment: <b>${r.meta.reviewNote.replace(/</g, '&lt;')}</b>` : '';
+    msg(`Revising <b>${no}</b> (current rev ${r.meta.rev}, ${r.meta.status}). ${r.photos.length} photo(s) already saved are kept; add only new photos.${note}`,
+      r.meta.status === 'Returned' ? 'err' : 'ok');
+  } catch (e) { msg('Could not load ' + no + ': ' + e.message, 'err'); }
+}
+
 if (!KEY) $('keyBox').classList.remove('hidden');
-loadDraft(); recalc(); renderPhotos();
+const editNo = new URL(location.href).searchParams.get('edit');
+if (editNo) {
+  history.replaceState(null, '', location.pathname);
+  loadDraft(); clearForm(); addRow('crew'); addRow('work'); recalc();
+  startEdit(editNo);
+} else { loadDraft(); recalc(); renderPhotos(); }
 </script>
 </body>
 </html>
