@@ -361,7 +361,7 @@ $('submitBtn').onclick = async () => {
 
   const crew = rows('crew').reduce((s, c) => s + num(c.regHrs) + num(c.otHrs), 0);
   const task = rows('work').reduce((s, w) => s + num(w.hrs), 0);
-  if (Math.abs(crew - task) >= 0.01 && !confirm(`Crew hours (${crew}) and task hours (${task}) do not match. Submit anyway?`)) return;
+  if (Math.abs(crew - task) >= 0.01) { msg(`Crew hours (${crew}) and task hours (${task}) must match before submitting. Adjust crew hours or task hours.`, 'err'); return; }
 
   const reportNo = $('reportNo').textContent;
   $('submitBtn').disabled = true; $('submitStatus').textContent = 'Checking…';

@@ -29,14 +29,14 @@
         <div><label>From</label><input type="date" id="fFrom"></div>
         <div><label>To</label><input type="date" id="fTo"></div>
         <div><label>Status</label><select id="fStatus"><option value="">All</option><option>Submitted</option><option>Reviewed</option><option>Returned</option></select></div>
-        <div><label>Flags</label><select id="fFlag"><option value="">All</option><option value="ex">Has exception</option><option value="warn">Hours mismatch / late callout</option></select></div>
+        <div><label>Flags</label><select id="fFlag"><option value="">All</option><option value="ex">Has exception</option><option value="late">Late callout</option></select></div>
         <div style="align-self:end"><button class="primary" id="loadBtn">Load</button></div>
       </div>
     </section>
     <section class="card">
       <div id="summary" class="hint" style="margin-bottom:8px"></div>
       <div class="tablewrap"><table class="list" id="tbl">
-        <thead><tr><th>Report no.</th><th>Prepared by</th><th>Crew/Task hrs</th><th>Exceptions</th><th>Photos</th><th>Status</th></tr></thead>
+        <thead><tr><th>Report no.</th><th>Prepared by</th><th>Hrs</th><th>Exceptions</th><th>Photos</th><th>Status</th></tr></thead>
         <tbody></tbody>
       </table></div>
     </section>

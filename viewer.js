@@ -25,6 +25,10 @@
       const r = await yesacApi({ action: 'list', key: KEY, from: $('fFrom').value, to: $('fTo').value });
       ROWS = r.rows; msg(''); renderList();
     } catch (e) {
+      if (MODE === 'yesac' && /admin key/i.test(e.message)) {
+        msg('The server is still running the old version (report viewing not enabled). Please contact Qcells Utility Team.', 'err');
+        return;
+      }
       msg('Load failed: ' + esc(e.message), 'err');
       if (/invalid.*key/i.test(e.message)) askKey();
     }
@@ -35,7 +39,7 @@
       if (st && r.status !== st) return false;
       const ex = r.incident !== 'None' || r.callout === 'Yes' || r.abnormal === 'Yes' || r.material === 'Yes';
       if (fl === 'ex' && !ex) return false;
-      if (fl === 'warn' && r.hrsMismatch !== 'Yes' && r.lateCallout !== 'Yes') return false;
+      if (fl === 'late' && r.lateCallout !== 'Yes') return false;
       return true;
     });
     const pending = ROWS.filter(r => r.status === 'Submitted').length;
@@ -48,7 +52,7 @@
       if (r.callout === 'Yes') ex.push(`<span class="badge ${r.lateCallout === 'Yes' ? 'warn' : 'amber'}">Callout${r.lateCallout === 'Yes' ? ' LATE' : ''}</span>`);
       if (r.abnormal === 'Yes') ex.push('<span class="badge amber">Abnormal</span>');
       if (r.material === 'Yes') ex.push('<span class="badge gray">Material</span>');
-      const hrs = `${r.crewHrs} / ${r.taskHrs}` + (r.hrsMismatch === 'Yes' ? ' <span class="badge warn">≠</span>' : '');
+      const hrs = `${r.crewHrs}`;
       return `<tr class="click" data-no="${esc(r.reportNo)}"><td><b>${esc(r.reportNo)}</b>${r.rev > 0 ? ` <span class="hint">rev ${r.rev}</span>` : ''}</td>
         <td>${esc(r.preparedBy)}</td><td>${hrs}</td><td>${ex.join(' ') || '<span class="hint">—</span>'}</td>
         <td>${r.photoCount || 0}</td><td>${statusBadge(r.status)}</td></tr>`;
@@ -92,7 +96,7 @@
         <dt>Prepared by</dt><dd>${esc(R.preparedBy)}</dd>
         <dt>Area</dt><dd>${esc(R.area) || '—'}</dd>
         <dt>Submitted</dt><dd>${new Date(M.submittedAt).toLocaleString()} (rev ${M.rev})</dd>
-        <dt>Crew / task hrs</dt><dd>${M.crewHrs} / ${M.taskHrs} ${M.hrsMismatch === 'Yes' ? '<span class="badge warn">Mismatch</span>' : '<span class="badge ok">Match</span>'}</dd>
+        <dt>Total hrs</dt><dd>${M.crewHrs}</dd>
         ${MODE === 'admin' && M.reviewNote ? `<dt>Review note</dt><dd>${esc(M.reviewNote)}</dd>` : ''}
       </dl></section>
     <section class="card"><h2>Crew</h2>${table(R.crew, [['name', 'Name'], ['role', 'Role'], ['regHrs', 'Reg'], ['otHrs', 'OT']])}</section>
