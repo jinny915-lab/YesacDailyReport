@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>YESAC My Reports</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header class="top">
+  <h1>YESAC Daily Report · Submitted Reports</h1>
+  <div class="sub"><a href="index.html" style="color:#fff">+ New report</a> · <a href="#" id="forgetKey" style="color:#fff">Forget key</a></div>
+</header>
+
+<main>
+  <div id="keyBox" class="msg err hidden">
+    Access key required (same key as the input page).
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="keyInput" placeholder="Access key"><button id="keySave" class="primary">Save</button></div>
+  </div>
+  <div id="topMsg"></div>
+
+  <!-- LIST -->
+  <div id="listView">
+    <section class="card">
+      <h2>Reports</h2>
+      <div class="grid noprint">
+        <div><label>From</label><input type="date" id="fFrom"></div>
+        <div><label>To</label><input type="date" id="fTo"></div>
+        <div><label>Status</label><select id="fStatus"><option value="">All</option><option>Submitted</option><option>Reviewed</option><option>Returned</option></select></div>
+        <div><label>Flags</label><select id="fFlag"><option value="">All</option><option value="ex">Has exception</option><option value="warn">Hours mismatch / late callout</option></select></div>
+        <div style="align-self:end"><button class="primary" id="loadBtn">Load</button></div>
+      </div>
+    </section>
+    <section class="card">
+      <div id="summary" class="hint" style="margin-bottom:8px"></div>
+      <div class="tablewrap"><table class="list" id="tbl">
+        <thead><tr><th>Report no.</th><th>Prepared by</th><th>Crew/Task hrs</th><th>Exceptions</th><th>Photos</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="detailView" class="hidden">
+    <div class="noprint" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button id="backBtn">← List</button>
+      <button id="printBtn">Print / PDF</button>
+      <a id="reviseLink"><button class="primary">Revise &amp; resubmit</button></a>
+    </div>
+    <div id="detail"></div>
+  </div>
+</main>
+
+<script>window.VIEW_MODE = 'yesac';</script>
+<script src="viewer.js"></script>
+</body>
+</html>
