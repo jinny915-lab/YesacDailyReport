@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YESAC Daily Report</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header class="top">
+  <h1>Qcells CTV · YESAC Electrical Daily Report</h1>
+  <div class="sub">Report no. <b id="reportNo">—</b> <span id="revInfo"></span></div>
+</header>
+
+<main>
+  <div id="keyBox" class="msg err hidden">
+    Access key missing. Open the link provided by Qcells Utility Team, or enter the key:
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="keyInput" placeholder="Access key"><button id="keySave" class="primary">Save</button></div>
+  </div>
+  <div id="topMsg"></div>
+
+  <!-- 1. HEADER -->
+  <section class="card">
+    <h2>1. Report Info</h2>
+    <div class="grid">
+      <div><label class="req">Report date</label><input type="date" id="reportDate" data-req></div>
+      <div><label class="req">Shift</label>
+        <select id="shift" data-req><option value="">Select</option><option>Day</option><option>Night</option></select></div>
+      <div><label class="req">Prepared by</label><input id="preparedBy" data-req placeholder="Name"></div>
+      <div><label>Primary area</label><input id="area" placeholder="e.g. U1, Cell, Module"></div>
+    </div>
+  </section>
+
+  <!-- 2. CREW -->
+  <section class="card">
+    <h2>2. Crew & Hours <button class="small" data-add="crew">+ Add</button></h2>
+    <div id="crewList"></div>
+    <div class="grid" style="margin-top:6px">
+      <div><label>Crew total hrs (auto)</label><input class="calc" id="crewHrs" readonly></div>
+      <div><label>Task total hrs (auto)</label><input class="calc" id="taskHrs" readonly></div>
+      <div><label>Hours check</label><div id="hrsCheck" style="padding-top:6px"></div></div>
+    </div>
+  </section>
+
+  <!-- 3. SAFETY -->
+  <section class="card">
+    <h2>3. Safety</h2>
+    <div class="grid">
+      <div><label class="req">Incident / near miss today</label>
+        <select id="incident" data-req><option value="">Select</option><option>None</option><option>Near miss</option><option>First aid</option><option>Recordable / property damage</option></select></div>
+      <div><label class="req">PPE / LOTO verified</label>
+        <select id="ppe" data-req><option value="">Select</option><option>Yes</option><option>N/A – no energized work</option></select></div>
+      <div><label>Permits used</label><input id="permits" placeholder="e.g. Hot work, EEWP #"></div>
+    </div>
+    <div style="margin-top:10px"><label>Safety notes</label><textarea id="safetyNote"></textarea></div>
+  </section>
+
+  <!-- 4. WORK -->
+  <section class="card">
+    <h2>4. Work Performed <button class="small" data-add="work">+ Add</button></h2>
+    <div class="hint" style="margin-bottom:8px">One line per Work ID (Qcells WO number). Use the same Work ID in photos and open items.</div>
+    <div id="workList"></div>
+  </section>
+
+  <!-- 5. OPEN ITEMS -->
+  <section class="card">
+    <h2>5. Open Items / Next Day Plan <button class="small" data-add="open">+ Add</button></h2>
+    <div id="openList"></div>
+  </section>
+
+  <!-- 6. EXCEPTIONS -->
+  <section class="card">
+    <h2>6. Exceptions Today <span id="attachBadge"></span></h2>
+    <div class="checks">
+      <label><input type="checkbox" id="exCallout"> Emergency callout</label>
+      <label><input type="checkbox" id="exAbnormal"> Abnormal reading</label>
+      <label><input type="checkbox" id="exMaterial"> Material / spare / rental used</label>
+    </div>
+    <div class="hint" style="margin-top:6px">Checked items open the matching section below. Incident other than "None" opens the incident section.</div>
+  </section>
+
+  <!-- A1 CALLOUT -->
+  <section class="card hidden" id="secCallout">
+    <h2>A-1. Emergency / Callout <button class="small" data-add="callout">+ Add</button></h2>
+    <div class="grid" style="margin-bottom:8px"><div><label>Response target (min)</label><input type="number" id="calloutTargetMin" value="30"></div></div>
+    <div id="calloutList"></div>
+  </section>
+
+  <!-- A2 INCIDENT -->
+  <section class="card hidden" id="secIncident">
+    <h2>A-2. Incident / Near Miss</h2>
+    <div class="grid">
+      <div><label class="req">Occurred at</label><input type="datetime-local" id="incAt"></div>
+      <div><label>Location</label><input id="incLoc"></div>
+      <div><label>Qcells notified at</label><input type="datetime-local" id="incNotified"></div>
+      <div><label>Written report due (auto, +24h)</label><input class="calc" id="incDue" readonly></div>
+    </div>
+    <div style="margin-top:10px"><label>What happened / immediate action</label><textarea id="incDesc"></textarea></div>
+  </section>
+
+  <!-- A3 ABNORMAL -->
+  <section class="card hidden" id="secAbnormal">
+    <h2>A-3. Abnormal Readings <button class="small" data-add="abnormal">+ Add</button></h2>
+    <div id="abnormalList"></div>
+  </section>
+
+  <!-- A4 MATERIAL -->
+  <section class="card hidden" id="secMaterial">
+    <h2>A-4. Material / Spare / Rental <button class="small" data-add="material">+ Add</button></h2>
+    <div id="materialList"></div>
+  </section>
+
+  <!-- B PHOTOS -->
+  <section class="card">
+    <h2>B. Photos (optional) <label class="small" style="margin:0"><button class="small" id="addPhotoBtn" type="button">+ Add photos</button></label></h2>
+    <input type="file" id="photoInput" accept="image/*" multiple class="hidden">
+    <div class="hint" style="margin-bottom:8px">Photos are resized (max 1600 px, JPEG) before upload. Max 12 per submission.</div>
+    <div class="photos" id="photoList"></div>
+  </section>
+
+  <section class="card">
+    <h2>Remarks</h2>
+    <textarea id="remarks"></textarea>
+    <div class="hint" style="margin-top:8px">This report records work performed; it does not approve extra charges or T&amp;M.</div>
+  </section>
+</main>
+
+<div class="submitbar">
+  <div id="submitStatus" class="hint">Draft is saved on this device automatically.</div>
+  <div style="display:flex;gap:8px">
+    <button id="clearBtn">New report</button>
+    <button id="submitBtn" class="primary">Submit</button>
+  </div>
+</div>
+
+<script>
+const KEY = yesacKey('yesac_submit_key');
+const DRAFT = 'yesac_draft_v1';
+const $ = id => document.getElementById(id);
+const photos = []; // {data(base64), url, tag, workId, caption, kb}
+
+/* ---------- repeatable rows ---------- */
+const DEF = {
+  crew: { box: 'crewList', title: 'Crew', fields: [
+    ['name', 'Name', 'text'], ['role', 'Role', 'select', ['Supervisor/Engineer', 'Electrician', 'Helper', 'Other']],
+    ['regHrs', 'Regular hrs', 'number'], ['otHrs', 'OT hrs', 'number']] },
+  work: { box: 'workList', title: 'Work', fields: [
+    ['workId', 'Work ID (WO#)', 'text'], ['type', 'Type', 'select', ['Corrective', 'Preventive', 'Inspection/Round', 'Project/Improvement', 'Emergency', 'OJT', 'Other']],
+    ['building', 'Building', 'select', ['Ingot', 'Wafer', 'Cell', 'Module', 'Utility (U1–U3)', 'Office', 'Site/Outdoor', 'Other']],
+    ['location', 'Location / asset', 'text'], ['hrs', 'Hrs', 'number'],
+    ['status', 'Status', 'select', ['Complete', 'In progress', 'On hold – parts', 'On hold – outage needed', 'Cancelled']],
+    ['action', 'Action / finding / result', 'textarea']] },
+  open: { box: 'openList', title: 'Open item', fields: [
+    ['workId', 'Work ID', 'text'], ['item', 'Item / issue', 'text'], ['plan', 'Next action', 'text'],
+    ['need', 'Need from Qcells', 'text'], ['due', 'Target date', 'date']] },
+  callout: { box: 'calloutList', title: 'Callout', fields: [
+    ['workId', 'Work ID', 'text'], ['faultStart', 'Fault start', 'datetime-local'], ['callReceived', 'Call received', 'datetime-local'],
+    ['onSite', 'On site', 'datetime-local'], ['restored', 'Restored', 'datetime-local'],
+    ['respMin', 'Response min (auto)', 'calc'], ['recMin', 'Recovery min (auto)', 'calc'], ['delay', 'Result', 'calc'],
+    ['remarks', 'Switching / restoration steps, delay reason', 'textarea']] },
+  abnormal: { box: 'abnormalList', title: 'Reading', fields: [
+    ['workId', 'Work ID', 'text'], ['asset', 'Asset / point', 'text'], ['param', 'Parameter', 'text'],
+    ['value', 'Measured', 'text'], ['limit', 'Normal / limit', 'text'], ['action', 'Action taken', 'text']] },
+  material: { box: 'materialList', title: 'Material', fields: [
+    ['workId', 'Work ID', 'text'], ['item', 'Item / part no.', 'text'], ['qty', 'Qty', 'number'],
+    ['source', 'Source', 'select', ['Qcells stock', 'Yesac supplied', 'Rental', 'Purchase request']], ['note', 'Note', 'text']] }
+};
+
+function addRow(kind, val = {}) {
+  const d = DEF[kind], box = $(d.box);
+  const row = document.createElement('div');
+  row.className = 'row'; row.dataset.kind = kind;
+  const g = document.createElement('div'); g.className = 'grid';
+  d.fields.forEach(([k, label, type, opts]) => {
+    const w = document.createElement('div');
+    if (type === 'textarea') w.style.gridColumn = '1 / -1';
+    const l = document.createElement('label'); l.textContent = label; w.appendChild(l);
+    let el;
+    if (type === 'select') {
+      el = document.createElement('select');
+      el.innerHTML = '<option value="">Select</option>' + opts.map(o => `<option>${o}</option>`).join('');
+    } else if (type === 'textarea') el = document.createElement('textarea');
+    else { el = document.createElement('input'); el.type = type === 'calc' ? 'text' : type;
+      if (type === 'calc') { el.readOnly = true; el.className = 'calc'; }
+      if (type === 'number') { el.step = '0.5'; el.min = '0'; } }
+    el.dataset.k = k;
+    if (val[k] != null) el.value = val[k];
+    w.appendChild(el); g.appendChild(w);
+  });
+  const del = document.createElement('button');
+  del.className = 'small del'; del.type = 'button'; del.textContent = 'Remove';
+  del.onclick = () => { row.remove(); recalc(); };
+  const t = document.createElement('div'); t.className = 'rowtitle'; t.textContent = d.title;
+  row.append(t, del, g);
+  box.appendChild(row);
+  renumber(kind);
+  return row;
+}
+function renumber(kind) {
+  [...$(DEF[kind].box).children].forEach((r, i) => r.querySelector('.rowtitle').textContent = DEF[kind].title + ' ' + (i + 1));
+}
+function rows(kind) {
+  return [...$(DEF[kind].box).children].map(r => {
+    const o = {}; r.querySelectorAll('[data-k]').forEach(el => o[el.dataset.k] = el.value.trim()); return o;
+  }).filter(o => Object.entries(o).some(([k, v]) => v && !['respMin', 'recMin', 'delay'].includes(k)));
+}
+document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => addRow(b.dataset.add));
+
+/* ---------- calculations ---------- */
+const num = x => { const n = parseFloat(x); return isNaN(n) ? 0 : n; };
+const mins = (a, b) => (a && b) ? Math.round((new Date(b) - new Date(a)) / 60000) : null;
+
+function recalc() {
+  const date = $('reportDate').value, shift = $('shift').value;
+  $('reportNo').textContent = (date && shift) ? `YES-${date.replace(/-/g, '')}-${shift === 'Night' ? 'N' : 'D'}` : '—';
+
+  const crew = rows('crew').reduce((s, c) => s + num(c.regHrs) + num(c.otHrs), 0);
+  const task = rows('work').reduce((s, w) => s + num(w.hrs), 0);
+  $('crewHrs').value = crew || ''; $('taskHrs').value = task || '';
+  $('hrsCheck').innerHTML = (!crew && !task) ? '' :
+    (Math.abs(crew - task) < 0.01 ? '<span class="badge ok">Match</span>' : `<span class="badge warn">Mismatch ${(crew - task).toFixed(1)} h</span>`);
+
+  const target = num($('calloutTargetMin').value) || 30;
+  [...$('calloutList').children].forEach(r => {
+    const g = k => r.querySelector(`[data-k="${k}"]`);
+    const resp = mins(g('callReceived').value, g('onSite').value);
+    const rec = mins(g('faultStart').value, g('restored').value);
+    g('respMin').value = resp == null ? '' : (resp < 0 ? 'Check times' : resp);
+    g('recMin').value = rec == null ? '' : (rec < 0 ? 'Check times' : rec);
+    g('delay').value = resp == null || resp < 0 ? '' : (resp > target ? 'LATE' : 'OK');
+    g('delay').classList.toggle('missing', resp > target);
+  });
+
+  const inc = $('incident').value;
+  const showInc = inc && inc !== 'None';
+  $('secIncident').classList.toggle('hidden', !showInc);
+  $('secCallout').classList.toggle('hidden', !$('exCallout').checked);
+  $('secAbnormal').classList.toggle('hidden', !$('exAbnormal').checked);
+  $('secMaterial').classList.toggle('hidden', !$('exMaterial').checked);
+  ['callout', 'abnormal', 'material'].forEach(k => {
+    const on = $('ex' + k[0].toUpperCase() + k.slice(1)).checked;
+    if (on && !$(DEF[k].box).children.length) addRow(k);
+  });
+  if ($('incAt').value) {
+    const d = new Date(new Date($('incAt').value).getTime() + 24 * 3600 * 1000);
+    $('incDue').value = d.toLocaleString();
+  } else $('incDue').value = '';
+
+  const ex = showInc || $('exCallout').checked || $('exAbnormal').checked || $('exMaterial').checked;
+  $('attachBadge').innerHTML = ex ? '<span class="badge amber">Appendix A required</span>' : '<span class="badge gray">None – 1-page report</span>';
+  saveDraft();
+}
+document.addEventListener('input', recalc);
+document.addEventListener('change', recalc);
+
+/* ---------- collect / restore ---------- */
+const SIMPLE = ['reportDate', 'shift', 'preparedBy', 'area', 'incident', 'ppe', 'permits', 'safetyNote',
+  'calloutTargetMin', 'incAt', 'incLoc', 'incNotified', 'incDesc', 'remarks'];
+function collect() {
+  const v = id => $(id).value.trim();
+  const inc = v('incident');
+  return {
+    reportDate: v('reportDate'), shift: v('shift'), preparedBy: v('preparedBy'), area: v('area'),
+    crew: rows('crew'), work: rows('work'), open: rows('open'),
+    safety: { incident: inc, ppe: v('ppe'), permits: v('permits'), note: v('safetyNote') },
+    exceptions: { callout: $('exCallout').checked, abnormal: $('exAbnormal').checked, material: $('exMaterial').checked },
+    calloutTargetMin: num(v('calloutTargetMin')) || 30,
+    callouts: $('exCallout').checked ? rows('callout') : [],
+    incidentDetail: (inc && inc !== 'None') ? { at: v('incAt'), location: v('incLoc'), notifiedAt: v('incNotified'), desc: v('incDesc') } : null,
+    abnormal: $('exAbnormal').checked ? rows('abnormal') : [],
+    materials: $('exMaterial').checked ? rows('material') : [],
+    remarks: v('remarks')
+  };
+}
+function saveDraft() {
+  try {
+    const s = {}; SIMPLE.forEach(id => s[id] = $(id).value);
+    s.ex = [$('exCallout').checked, $('exAbnormal').checked, $('exMaterial').checked];
+    Object.keys(DEF).forEach(k => s['r_' + k] = [...$(DEF[k].box).children].map(r => {
+      const o = {}; r.querySelectorAll('[data-k]').forEach(el => o[el.dataset.k] = el.value); return o; }));
+    localStorage.setItem(DRAFT, JSON.stringify(s));
+  } catch (e) {}
+}
+function loadDraft() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(DRAFT) || 'null'); } catch (e) {}
+  if (!s) { $('reportDate').value = new Date().toLocaleDateString('en-CA'); addRow('crew'); addRow('crew'); addRow('work'); addRow('open'); return; }
+  SIMPLE.forEach(id => { if (s[id] != null) $(id).value = s[id]; });
+  [$('exCallout').checked, $('exAbnormal').checked, $('exMaterial').checked] = s.ex || [];
+  Object.keys(DEF).forEach(k => (s['r_' + k] || []).forEach(v => addRow(k, v)));
+  if (!$('crewList').children.length) addRow('crew');
+  if (!$('workList').children.length) addRow('work');
+}
+
+/* ---------- photos ---------- */
+$('addPhotoBtn').onclick = () => $('photoInput').click();
+$('photoInput').onchange = async e => {
+  for (const f of e.target.files) {
+    if (photos.length >= 12) { alert('Max 12 photos per submission.'); break; }
+    try { photos.push(await compress(f)); } catch (err) { alert('Could not read ' + f.name); }
+  }
+  e.target.value = ''; renderPhotos();
+};
+function compress(file, maxSide = 1600, q = 0.72) {
+  return new Promise((ok, bad) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const url = c.toDataURL('image/jpeg', q);
+      URL.revokeObjectURL(img.src);
+      const data = url.split(',')[1];
+      ok({ data, url, tag: '', workId: '', caption: '', kb: Math.round(data.length * 0.75 / 1024) });
+    };
+    img.onerror = bad;
+    img.src = URL.createObjectURL(file);
+  });
+}
+function renderPhotos() {
+  const ids = rows('work').map(w => w.workId).filter(Boolean);
+  $('photoList').innerHTML = '';
+  photos.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'photo';
+    d.innerHTML = `<img src="${p.url}" alt="photo ${i + 1}"><div class="meta">
+      <div class="size">#${i + 1} · ${p.kb} KB</div>
+      <input list="woList" placeholder="Work ID" value="${p.workId}" data-f="workId">
+      <select data-f="tag"><option value="">Tag</option><option>Before</option><option>After</option><option>Finding</option><option>Other</option></select>
+      <input placeholder="Caption" value="${p.caption.replace(/"/g, '&quot;')}" data-f="caption">
+      <button class="small del" type="button">Remove</button></div>`;
+    d.querySelector('select').value = p.tag;
+    d.querySelectorAll('[data-f]').forEach(el => el.oninput = el.onchange = () => p[el.dataset.f] = el.value);
+    d.querySelector('button').onclick = () => { photos.splice(i, 1); renderPhotos(); };
+    $('photoList').appendChild(d);
+  });
+  let dl = $('woList'); if (!dl) { dl = document.createElement('datalist'); dl.id = 'woList'; document.body.appendChild(dl); }
+  dl.innerHTML = ids.map(x => `<option value="${x}">`).join('');
+}
+
+/* ---------- validate & submit ---------- */
+function validate(rep) {
+  const errs = [];
+  document.querySelectorAll('.missing').forEach(e => { if (e.dataset.k !== 'delay') e.classList.remove('missing'); });
+  document.querySelectorAll('[data-req]').forEach(el => { if (!el.value) { el.classList.add('missing'); errs.push(el.previousElementSibling.textContent); } });
+  if (!rep.work.length) errs.push('At least one work line');
+  rep.work.forEach((w, i) => { if (!w.action) errs.push(`Work ${i + 1}: action`); if (!w.hrs) errs.push(`Work ${i + 1}: hrs`); });
+  if (rep.incidentDetail && !rep.incidentDetail.at) { $('incAt').classList.add('missing'); errs.push('Incident time'); }
+  if (rep.exceptions.callout && !rep.callouts.length) errs.push('Callout details');
+  return errs;
+}
+function msg(html, cls) { $('topMsg').innerHTML = html ? `<div class="msg ${cls}">${html}</div>` : ''; if (html) window.scrollTo(0, 0); }
+
+$('submitBtn').onclick = async () => {
+  if (!KEY) { $('keyBox').classList.remove('hidden'); return; }
+  const rep = collect();
+  const errs = validate(rep);
+  if (errs.length) { msg('Please complete: ' + errs.join(', '), 'err'); return; }
+
+  const crew = rows('crew').reduce((s, c) => s + num(c.regHrs) + num(c.otHrs), 0);
+  const task = rows('work').reduce((s, w) => s + num(w.hrs), 0);
+  if (Math.abs(crew - task) >= 0.01 && !confirm(`Crew hours (${crew}) and task hours (${task}) do not match. Submit anyway?`)) return;
+
+  const reportNo = $('reportNo').textContent;
+  $('submitBtn').disabled = true; $('submitStatus').textContent = 'Checking…';
+  try {
+    const chk = await yesacApi({ action: 'check', key: KEY, reportNo });
+    if (chk.exists && !confirm(`${reportNo} was already submitted (rev ${chk.rev}). Submit a revision? It replaces the previous text; earlier photos are kept.`)) {
+      $('submitBtn').disabled = false; $('submitStatus').textContent = ''; return;
+    }
+    $('submitStatus').textContent = `Uploading${photos.length ? ' ' + photos.length + ' photo(s)' : ''}…`;
+    const res = await yesacApi({ action: 'submit', key: KEY, report: rep,
+      photos: photos.map(p => ({ data: p.data, tag: p.tag, workId: p.workId, caption: p.caption })) });
+    msg(`Submitted <b>${res.reportNo}</b> (rev ${res.rev}) · ${res.photosSaved} photo(s) saved.`, 'ok');
+    $('revInfo').textContent = `· rev ${res.rev} submitted`;
+    photos.length = 0; renderPhotos();
+    $('submitStatus').textContent = 'Submitted. Press "New report" to start the next one.';
+  } catch (err) {
+    msg('Submit failed: ' + err.message + '. Your entries are kept on this device; try again.', 'err');
+    $('submitStatus').textContent = '';
+  } finally { $('submitBtn').disabled = false; }
+};
+
+$('clearBtn').onclick = () => {
+  if (!confirm('Clear the form and start a new report?')) return;
+  try { localStorage.removeItem(DRAFT); } catch (e) {}
+  location.reload();
+};
+
+$('keySave').onclick = () => {
+  const k = $('keyInput').value.trim(); if (!k) return;
+  try { localStorage.setItem('yesac_submit_key', k); } catch (e) {}
+  location.reload();
+};
+
+if (!KEY) $('keyBox').classList.remove('hidden');
+loadDraft(); recalc(); renderPhotos();
+</script>
+</body>
+</html>
